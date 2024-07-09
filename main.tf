@@ -26,7 +26,7 @@ resource "azurerm_container_group" "this" {
       secure_environment_variables = try(container.value.secure_environment_variables, null)
 
       dynamic "liveness_probe" {
-        for_each = try(container.value.liveness_probe, null) == null ? [] : [1]
+        for_each = try(var.liveness_probe, null) == null ? [] : [1]
 
         content {
           exec                  = try(liveness_probe.value.exec, null)
@@ -55,7 +55,7 @@ resource "azurerm_container_group" "this" {
         }
       }
       dynamic "readiness_probe" {
-        for_each = try(container.value.readiness_probe, null) == null ? [] : [1]
+        for_each = try(var.readiness_probe, null) == null ? [] : [1]
 
         content {
           exec                  = try(readiness_probe.value.exec, null)
