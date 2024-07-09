@@ -269,6 +269,11 @@ object({
     exec = object({
       command = list(string)
     })
+    period_seconds        = number
+    failure_threshold     = number
+    success_threshold     = number
+    timeout_seconds       = number
+    initial_delay_seconds = number
     http_get = object({
       path         = string
       port         = number
@@ -361,6 +366,11 @@ object({
     exec = object({
       command = list(string)
     })
+    period_seconds        = number
+    failure_threshold     = number
+    success_threshold     = number
+    timeout_seconds       = number
+    initial_delay_seconds = number
     http_get = object({
       path         = string
       port         = number
@@ -382,13 +392,14 @@ Type:
 
 ```hcl
 map(object({
+    role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
+    skip_service_principal_aad_check       = optional(bool, false)
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
-    role_definition_id_or_name             = string
-    skip_service_principal_aad_check       = optional(bool, false)
+    principal_type                         = optional(string, null)
   }))
 ```
 
