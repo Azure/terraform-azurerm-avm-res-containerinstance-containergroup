@@ -43,7 +43,7 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_container_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group) (resource)
-- [azurerm_monitor_diagnostic_setting.storage_account](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
+- [azurerm_monitor_diagnostic_setting.container_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
@@ -84,6 +84,12 @@ Type: `string`
 Description: The restart policy for the container group.
 
 Type: `string`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: (Optional) Tags of the resource.
+
+Type: `map(string)`
 
 ## Optional Inputs
 
@@ -156,6 +162,7 @@ map(object({
     event_hub_authorization_rule_resource_id = optional(string, null)
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
+    metadata                                 = optional(string, null)
   }))
 ```
 
@@ -413,13 +420,13 @@ Type: `list(string)`
 
 Default: `[]`
 
-### <a name="input_tags"></a> [tags](#input\_tags)
+### <a name="input_zones"></a> [zones](#input\_zones)
 
-Description: (Optional) Tags of the resource.
+Description: A list of availability zones in which the resource should be created.
 
-Type: `map(string)`
+Type: `list(string)`
 
-Default: `null`
+Default: `[]`
 
 ## Outputs
 

@@ -26,6 +26,12 @@ variable "restart_policy" {
   description = "The restart policy for the container group."
 }
 
+# tflint-ignore: terraform_unused_declarations
+variable "tags" {
+  type        = map(string)
+  description = "(Optional) Tags of the resource."
+}
+
 variable "containers" {
   type = map(object({
     image  = string
@@ -70,6 +76,7 @@ variable "diagnostic_settings" {
     event_hub_authorization_rule_resource_id = optional(string, null)
     event_hub_name                           = optional(string, null)
     marketplace_partner_resource_id          = optional(string, null)
+    metadata                                 = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -298,9 +305,8 @@ variable "subnet_ids" {
   description = "The subnet IDs for the container group."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "tags" {
-  type        = map(string)
-  default     = null
-  description = "(Optional) Tags of the resource."
+variable "zones" {
+  type        = list(string)
+  default     = []
+  description = "A list of availability zones in which the resource should be created."
 }

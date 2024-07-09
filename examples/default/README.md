@@ -70,7 +70,7 @@ resource "azurerm_subnet" "this" {
 
     service_delegation {
       name    = "Microsoft.ContainerInstance/containerGroups"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"]
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
 }
@@ -128,9 +128,12 @@ module "test" {
     workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
     workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
   }
+  tags = {
+    cc = "avm"
+  }
+  zones            = ["1"]
   priority         = "Regular"
   enable_telemetry = var.enable_telemetry
-
   containers = {
     container1 = {
       name   = "container1"
@@ -145,6 +148,9 @@ module "test" {
       ]
       environment_variables = {
         "ENVIRONMENT" = "production"
+      }
+      secure_environment_variables = {
+        "SECENV" = "avmpoc"
       }
       volumes = {
         secrets = {

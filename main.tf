@@ -12,6 +12,7 @@ resource "azurerm_container_group" "this" {
   restart_policy                      = var.restart_policy
   subnet_ids                          = length(var.subnet_ids) == 0 ? null : var.subnet_ids
   tags                                = var.tags
+  zones                               = var.zones
 
   dynamic "container" {
     for_each = var.containers

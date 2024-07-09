@@ -1,6 +1,6 @@
 
 # Enable Diagnostic Settings for Container Group
-resource "azurerm_monitor_diagnostic_setting" "storage_account" {
+resource "azurerm_monitor_diagnostic_setting" "container_group" {
   for_each = var.diagnostic_settings == null ? {} : var.diagnostic_settings
 
   name                           = each.value.name
