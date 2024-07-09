@@ -140,27 +140,6 @@ module "test" {
       environment_variables = {
         "ENVIRONMENT" = "production"
       }
-
-      liveness_probe = {
-        exec = {
-          command = ["ls"]
-        }
-        failure_threshold     = 3
-        initial_delay_seconds = 10
-        period_seconds        = 10
-        success_threshold     = 1
-        timeout_seconds       = 1
-      }
-      readiness_probe = {
-        exec = {
-          command = ["ls"]
-        }
-        failure_threshold     = 3
-        initial_delay_seconds = 10
-        period_seconds        = 10
-        success_threshold     = 1
-        timeout_seconds       = 1
-      }
       volumes = {
         secrets = {
           mount_path = "/etc/secrets"
@@ -177,8 +156,26 @@ module "test" {
           }
         }
       }
-    }
+      commands = ["/bin/sh", "-c", "sleep 30", "touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600"]
 
+      readiness_probe = {
+        exec                 = ["cat", "/tmp/healthy"]
+        inital_delay_seconds = 10
+        period_seconds       = 5
+        failure_threashold   = 3
+        sucess_threashold    = 1
+        timeout_seconds      = 120
+      }
+
+      liveness_probe = {
+        exec                 = ["cat", "/tmp/healthy"]
+        inital_delay_seconds = 10
+        period_seconds       = 60
+        failure_threashold   = 3
+        sucess_threashold    = 1
+        timeout_seconds      = 120
+      }
+    }
   }
   exposed_ports = [
     {
