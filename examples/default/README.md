@@ -128,8 +128,8 @@ module "test" {
     workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
     workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
   }
-  priority = "Regular"
-
+  priority         = "Regular"
+  enable_telemetry = var.enable_telemetry
 
   containers = {
     container1 = {
