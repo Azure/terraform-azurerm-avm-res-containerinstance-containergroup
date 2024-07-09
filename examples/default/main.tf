@@ -108,19 +108,7 @@ resource "azurerm_key_vault_secret" "secret" {
   depends_on = [azurerm_role_assignment.current]
 }
 
-//WIP
-# resource "azurerm_private_dns_zone" "this" {
-#   name                = "private.contoso.com"
-#   resource_group_name = azurerm_resource_group.this.name
-# }
 
-# resource "azurerm_virtual_network_link" "dns_zone_link" {
-#   name                = "vnet-dns-zone-link"
-#   resource_group_name = azurerm_resource_group.this.name
-#   virtual_network_id  = azurerm_virtual_network.this.id
-#   registration_enabled = true
-#   zone_name           = azurerm_private_dns_zone.this.name
-# }
 
 module "test" {
   source              = "../../"
@@ -136,20 +124,7 @@ module "test" {
   }
   priority = "Regular"
 
-  # container_volume_secrets = {
-  #   container1 = {
-  #     volume = {
-  #       nginx = "PRODUCTIONVOL"
-  #     }
-  #   }
-  # }
-  # container_secure_environment_variables = {
-  #   container = {
-  #     value = {
-  #       container1 = "PRODUCTIONSECRET"
-  #     }
-  #   }
-  # }
+
   containers = {
     container1 = {
       name   = "container1"
