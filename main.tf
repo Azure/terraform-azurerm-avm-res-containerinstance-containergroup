@@ -73,8 +73,8 @@ resource "azurerm_container_group" "this" {
               port   = try(http_get.value.port, null)
               scheme = try(http_get.value.scheme, null)
             }
-          } //http_get
-        }   //readiness_probe_content
+          }
+        }
       }
       dynamic "volume" {
         for_each = container.value.volumes

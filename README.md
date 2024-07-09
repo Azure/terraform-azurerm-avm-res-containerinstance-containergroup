@@ -401,15 +401,23 @@ The following outputs are exported:
 
 ### <a name="output_fqdn"></a> [fqdn](#output\_fqdn)
 
-Description: n/a
-
-### <a name="output_id"></a> [id](#output\_id)
-
-Description: n/a
+Description: The FQDN of the container group derived from `dns_name_label`
 
 ### <a name="output_ip_address"></a> [ip\_address](#output\_ip\_address)
 
-Description: n/a
+Description: The IP address allocated to the container group
+
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: Name of the container group
+
+### <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name)
+
+Description: Name of the container group resource group
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: Resource ID of Container Group Instance
 
 ## Modules
 
