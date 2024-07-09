@@ -85,42 +85,9 @@ Description: The restart policy for the container group.
 
 Type: `string`
 
-### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
-
-Description: The role assignments for the container group.
-
-Type:
-
-```hcl
-map(object({
-    principal_id                           = string
-    description                            = optional(string, null)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-    role_definition_id_or_name             = string
-    skip_service_principal_aad_check       = optional(bool, null)
-  }))
-```
-
 ## Optional Inputs
 
 The following input variables are optional (have default values):
-
-### <a name="input_container_diagnostics_log_analytics"></a> [container\_diagnostics\_log\_analytics](#input\_container\_diagnostics\_log\_analytics)
-
-Description: The Log Analytics workspace configuration for container diagnostics.
-
-Type:
-
-```hcl
-object({
-    workspace_id  = string
-    workspace_key = string
-  })
-```
-
-Default: `null`
 
 ### <a name="input_containers"></a> [containers](#input\_containers)
 
@@ -378,6 +345,26 @@ object({
 ```
 
 Default: `null`
+
+### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
+
+Description: The role assignments for the container group.
+
+Type:
+
+```hcl
+map(object({
+    principal_id                           = string
+    description                            = optional(string, null)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    role_definition_id_or_name             = string
+    skip_service_principal_aad_check       = optional(bool, null)
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids)
 

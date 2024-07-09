@@ -26,28 +26,6 @@ variable "restart_policy" {
   description = "The restart policy for the container group."
 }
 
-variable "role_assignments" {
-  type = map(object({
-    principal_id                           = string
-    description                            = optional(string, null)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-    role_definition_id_or_name             = string
-    skip_service_principal_aad_check       = optional(bool, null)
-  }))
-  description = "The role assignments for the container group."
-}
-
-variable "container_diagnostics_log_analytics" {
-  type = object({
-    workspace_id  = string
-    workspace_key = string
-  })
-  default     = null
-  description = "The Log Analytics workspace configuration for container diagnostics."
-}
-
 variable "containers" {
   type = map(object({
     image  = string
@@ -257,6 +235,20 @@ variable "readiness_probe" {
   })
   default     = null
   description = "The readiness probe configuration for the container group."
+}
+
+variable "role_assignments" {
+  type = map(object({
+    principal_id                           = string
+    description                            = optional(string, null)
+    condition                              = optional(string, null)
+    condition_version                      = optional(string, null)
+    delegated_managed_identity_resource_id = optional(string, null)
+    role_definition_id_or_name             = string
+    skip_service_principal_aad_check       = optional(bool, null)
+  }))
+  default     = {}
+  description = "The role assignments for the container group."
 }
 
 variable "subnet_ids" {

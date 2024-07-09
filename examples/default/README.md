@@ -124,7 +124,7 @@ module "test" {
   os_type             = "Linux"
   subnet_ids          = [azurerm_subnet.this.id]
   restart_policy      = "Always"
-  container_diagnostics_log_analytics = {
+  diagnostics_log_analytics = {
     workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
     workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
   }
@@ -145,6 +145,27 @@ module "test" {
       ]
       environment_variables = {
         "ENVIRONMENT" = "production"
+      }
+
+      liveness_probe = {
+        exec = {
+          command = ["ls"]
+        }
+        failure_threshold     = 3
+        initial_delay_seconds = 10
+        period_seconds        = 10
+        success_threshold     = 1
+        timeout_seconds       = 1
+      }
+      readiness_probe = {
+        exec = {
+          command = ["ls"]
+        }
+        failure_threshold     = 3
+        initial_delay_seconds = 10
+        period_seconds        = 10
+        success_threshold     = 1
+        timeout_seconds       = 1
       }
       volumes = {
         secrets = {

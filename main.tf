@@ -102,7 +102,7 @@ resource "azurerm_container_group" "this" {
     }
   }
   dynamic "diagnostics" {
-    for_each = var.container_diagnostics_log_analytics != null ? [var.container_diagnostics_log_analytics] : []
+    for_each = var.diagnostics_log_analytics != null ? [var.diagnostics_log_analytics] : []
     content {
       log_analytics {
         workspace_id  = diagnostics.value.workspace_id
