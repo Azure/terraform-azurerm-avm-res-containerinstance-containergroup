@@ -24,6 +24,8 @@ module "regions" {
   version = "~> 0.3"
 }
 
+data "azurerm_client_config" "current" {}
+
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
@@ -43,17 +45,160 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
-module "test" {
-  source = "../../"
-  # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
-  # ...
+# A vnet is required for the private endpoint.
+resource "azurerm_virtual_network" "this" {
+  address_space       = ["192.168.0.0/24"]
   location            = azurerm_resource_group.this.location
-  name                = "TODO" # TODO update with module.naming.<RESOURCE_TYPE>.name_unique
+  name                = module.naming.virtual_network.name_unique
   resource_group_name = azurerm_resource_group.this.name
+}
 
-  enable_telemetry = var.enable_telemetry # see variables.tf
+resource "azurerm_subnet" "this" {
+  address_prefixes     = ["192.168.0.0/24"]
+  name                 = module.naming.subnet.name_unique
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+
+  delegation {
+    name = "delegation"
+
+    service_delegation {
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action", "Microsoft.Network/virtualNetworks/subnets/prepareNetworkPolicies/action"]
+    }
+  }
+}
+
+
+resource "azurerm_log_analytics_workspace" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  sku                 = "PerGB2018"
+}
+
+resource "azurerm_user_assigned_identity" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.user_assigned_identity.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+}
+
+
+resource "azurerm_key_vault" "keyvault" {
+  location                  = azurerm_resource_group.this.location
+  name                      = module.naming.key_vault.name_unique
+  resource_group_name       = azurerm_resource_group.this.name
+  sku_name                  = "standard"
+  tenant_id                 = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization = true
+}
+
+resource "azurerm_role_assignment" "current" {
+  principal_id         = data.azurerm_client_config.current.object_id
+  scope                = azurerm_key_vault.keyvault.id
+  role_definition_name = "Key Vault Administrator"
+}
+
+resource "azurerm_key_vault_secret" "secret" {
+  key_vault_id    = azurerm_key_vault.keyvault.id
+  name            = "secretname"
+  value           = "password123"
+  expiration_date = "2024-12-30T20:00:00Z"
+
+  depends_on = [azurerm_role_assignment.current]
+}
+
+//WIP
+# resource "azurerm_private_dns_zone" "this" {
+#   name                = "private.contoso.com"
+#   resource_group_name = azurerm_resource_group.this.name
+# }
+
+# resource "azurerm_virtual_network_link" "dns_zone_link" {
+#   name                = "vnet-dns-zone-link"
+#   resource_group_name = azurerm_resource_group.this.name
+#   virtual_network_id  = azurerm_virtual_network.this.id
+#   registration_enabled = true
+#   zone_name           = azurerm_private_dns_zone.this.name
+# }
+
+module "test" {
+  source              = "../../"
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.container_group.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  os_type             = "Linux"
+  subnet_ids          = [azurerm_subnet.this.id]
+  restart_policy      = "Always"
+  container_diagnostics_log_analytics = {
+    workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
+    workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
+  }
+  priority = "Regular"
+
+  # container_volume_secrets = {
+  #   container1 = {
+  #     volume = {
+  #       nginx = "PRODUCTIONVOL"
+  #     }
+  #   }
+  # }
+  # container_secure_environment_variables = {
+  #   container = {
+  #     value = {
+  #       container1 = "PRODUCTIONSECRET"
+  #     }
+  #   }
+  # }
+  containers = {
+    container1 = {
+      name   = "container1"
+      image  = "nginx:latest"
+      cpu    = "1"
+      memory = "2"
+      ports = [
+        {
+          port     = 80
+          protocol = "TCP"
+        }
+      ]
+      environment_variables = {
+        "ENVIRONMENT" = "production"
+      }
+      volumes = {
+        secrets = {
+          mount_path = "/etc/secrets"
+          name       = "secret1"
+          secret = {
+            "password" = base64encode("password123")
+          }
+        },
+        nginx = {
+          mount_path = "/usr/share/nginx/html"
+          name       = "nginx"
+          secret = {
+            "indexpage" = base64encode("Hello, World!")
+          }
+        }
+      }
+    }
+
+  }
+  exposed_ports = [
+    {
+      port     = 80
+      protocol = "TCP"
+    }
+  ]
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
+  }
+  role_assignments = {
+    role_assignment_1 = {
+      role_definition_id_or_name       = "Contributor"
+      principal_id                     = data.azurerm_client_config.current.object_id
+      skip_service_principal_aad_check = false
+    }
+  }
 }
