@@ -1,4 +1,6 @@
+# TODO: insert locals here.
 locals {
+
   managed_identities = {
     system_assigned_user_assigned = (var.managed_identities.system_assigned || length(var.managed_identities.user_assigned_resource_ids) > 0) ? {
       this = {
@@ -18,7 +20,9 @@ locals {
       }
     } : {}
   }
-  # Private endpoint application security group associations
+
+  # Private endpoint application security group associations.
+  # We merge the nested maps from private endpoints and application security group associations into a single map.
   private_endpoint_application_security_group_associations = { for assoc in flatten([
     for pe_k, pe_v in var.private_endpoints : [
       for asg_k, asg_v in pe_v.application_security_group_associations : {
@@ -28,6 +32,7 @@ locals {
       }
     ]
   ]) : "${assoc.pe_key}-${assoc.asg_key}" => assoc }
-  role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
-}
 
+  role_definition_resource_substring = "/providers/Microsoft.Authorization/roleDefinitions"
+
+}

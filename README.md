@@ -42,9 +42,11 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_container_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group) (resource)
-- [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
+- [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
+- [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
+- [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
+- [azurerm_resource_group.TODO](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
@@ -62,25 +64,13 @@ Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description: The name of the resource.
-
-Type: `string`
-
-### <a name="input_os_type"></a> [os\_type](#input\_os\_type)
-
-Description: The operating system type for the container group.
+Description: The name of the this resource.
 
 Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The name of the resource group in which to create the resource.
-
-Type: `string`
-
-### <a name="input_restart_policy"></a> [restart\_policy](#input\_restart\_policy)
-
-Description: The restart policy for the container group.
+Description: The resource group where the resources will be deployed.
 
 Type: `string`
 
@@ -88,82 +78,63 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_containers"></a> [containers](#input\_containers)
+### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
-Description: A map of containers to run in the container group.
-
-Type:
-
-```hcl
-map(object({
-    image  = string
-    cpu    = number
-    memory = number
-    ports = list(object({
-      port     = number
-      protocol = string
-    }))
-    volumes = map(object({
-      mount_path           = string
-      name                 = string
-      read_only            = optional(bool, false)
-      empty_dir            = optional(bool, false)
-      secret               = optional(map(string), null)
-      storage_account_name = optional(string, null)
-      storage_account_key  = optional(string, null)
-      share_name           = optional(string, null)
-      git_repo = optional(object({
-        url       = optional(string, null)
-        directory = optional(string, null)
-        revision  = optional(string, null)
-      }))
-    }))
-    environment_variables        = optional(map(string), {})
-    secure_environment_variables = optional(map(string), {})
-    commands                     = optional(list(string), null)
-  }))
-```
-
-Default: `{}`
-
-### <a name="input_diagnostics_log_analytics"></a> [diagnostics\_log\_analytics](#input\_diagnostics\_log\_analytics)
-
-Description: The Log Analytics workspace configuration for diagnostics.
+Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
+- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
+- `key_name` - The name of the key.
+- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
+- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
+  - `resource_id` - The resource ID of the user-assigned identity.
 
 Type:
 
 ```hcl
 object({
-    workspace_id  = string
-    workspace_key = string
+    key_vault_resource_id = string
+    key_name              = string
+    key_version           = optional(string, null)
+    user_assigned_identity = optional(object({
+      resource_id = string
+    }), null)
   })
 ```
 
 Default: `null`
 
-### <a name="input_dns_name_label"></a> [dns\_name\_label](#input\_dns\_name\_label)
+### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description: The DNS name label for the container group.
+Description: A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-Type: `string`
+- `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+- `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+- `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+- `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+- `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+- `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+- `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+- `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+- `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+- `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-Default: `null`
+Type:
 
-### <a name="input_dns_name_label_reuse_policy"></a> [dns\_name\_label\_reuse\_policy](#input\_dns\_name\_label\_reuse\_policy)
+```hcl
+map(object({
+    name                                     = optional(string, null)
+    log_categories                           = optional(set(string), [])
+    log_groups                               = optional(set(string), ["allLogs"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
+    log_analytics_destination_type           = optional(string, "Dedicated")
+    workspace_resource_id                    = optional(string, null)
+    storage_account_resource_id              = optional(string, null)
+    event_hub_authorization_rule_resource_id = optional(string, null)
+    event_hub_name                           = optional(string, null)
+    marketplace_partner_resource_id          = optional(string, null)
+  }))
+```
 
-Description: The DNS name label reuse policy for the container group.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_dns_name_servers"></a> [dns\_name\_servers](#input\_dns\_name\_servers)
-
-Description: A list of DNS name servers to use for the container group.
-
-Type: `list(string)`
-
-Default: `[]`
+Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -175,78 +146,19 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_exposed_ports"></a> [exposed\_ports](#input\_exposed\_ports)
+### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description: A list of ports to expose on the container group.
+Description: Controls the Resource Lock configuration for this resource. The following properties can be specified:
 
-Type:
-
-```hcl
-list(object({
-    port     = number
-    protocol = string
-  }))
-```
-
-Default: `[]`
-
-### <a name="input_image_registry_credential"></a> [image\_registry\_credential](#input\_image\_registry\_credential)
-
-Description: The credentials for the image registry.
-
-Type:
-
-```hcl
-map(object({
-    user_assigned_identity_id = string
-    server                    = string
-    username                  = string
-    password                  = string
-  }))
-```
-
-Default: `{}`
-
-### <a name="input_key_vault_key_id"></a> [key\_vault\_key\_id](#input\_key\_vault\_key\_id)
-
-Description: The Key Vault key ID for the container group.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_key_vault_user_assigned_identity_id"></a> [key\_vault\_user\_assigned\_identity\_id](#input\_key\_vault\_user\_assigned\_identity\_id)
-
-Description: The Key Vault user-assigned identity ID for the container group.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_liveness_probe"></a> [liveness\_probe](#input\_liveness\_probe)
-
-Description: The liveness probe configuration for the container group.
+- `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+- `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
 Type:
 
 ```hcl
 object({
-    exec = object({
-      command = list(string)
-    })
-    period_seconds        = number
-    failure_threshold     = number
-    success_threshold     = number
-    timeout_seconds       = number
-    initial_delay_seconds = number
-    http_get = object({
-      path         = string
-      port         = number
-      http_headers = map(string)
-    })
-    tcp_socket = object({
-      port = number
-    })
+    kind = string
+    name = optional(string, null)
   })
 ```
 
@@ -254,10 +166,10 @@ Default: `null`
 
 ### <a name="input_managed_identities"></a> [managed\_identities](#input\_managed\_identities)
 
-Description:   Controls the Managed Identity configuration on this resource. The following properties can be specified:
+Description: Controls the Managed Identity configuration on this resource. The following properties can be specified:
 
-  - `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
-  - `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
+- `system_assigned` - (Optional) Specifies if the System Assigned Managed Identity should be enabled.
+- `user_assigned_resource_ids` - (Optional) Specifies a list of User Assigned Managed Identity resource IDs to be assigned to this resource.
 
 Type:
 
@@ -270,17 +182,25 @@ object({
 
 Default: `{}`
 
-### <a name="input_priority"></a> [priority](#input\_priority)
-
-Description: The Priority for the container group.
-
-Type: `string`
-
-Default: `null`
-
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
-Description: Private Endpoints Configuration
+Description: A map of private endpoints to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
+- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
+- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
+- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
+- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+- `application_security_group_resource_ids` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
+- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
+- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
+- `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of this resource.
+- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `name` - The name of the IP configuration.
+  - `private_ip_address` - The private IP address of the IP configuration.
 
 Type:
 
@@ -295,7 +215,6 @@ map(object({
       condition                              = optional(string, null)
       condition_version                      = optional(string, null)
       delegated_managed_identity_resource_id = optional(string, null)
-      principal_type                         = optional(string, null)
     })), {})
     lock = optional(object({
       kind = string
@@ -303,7 +222,6 @@ map(object({
     }), null)
     tags                                    = optional(map(string), null)
     subnet_resource_id                      = string
-    subresource_name                        = string # NOTE: `subresource_name` can be excluded if the resource does not support multiple sub resource types (e.g. storage account supports blob, queue, etc)
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
@@ -320,38 +238,26 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_readiness_probe"></a> [readiness\_probe](#input\_readiness\_probe)
+### <a name="input_private_endpoints_manage_dns_zone_group"></a> [private\_endpoints\_manage\_dns\_zone\_group](#input\_private\_endpoints\_manage\_dns\_zone\_group)
 
-Description: The readiness probe configuration for the container group.
+Description: Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy.
 
-Type:
+Type: `bool`
 
-```hcl
-object({
-    exec = object({
-      command = list(string)
-    })
-    period_seconds        = number
-    failure_threshold     = number
-    success_threshold     = number
-    timeout_seconds       = number
-    initial_delay_seconds = number
-    http_get = object({
-      path         = string
-      port         = number
-      http_headers = map(string)
-    })
-    tcp_socket = object({
-      port = number
-    })
-  })
-```
-
-Default: `null`
+Default: `true`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description: The role assignments for the container group.
+Description: A map of role assignments to create on this resource. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+
+- `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+- `principal_id` - The ID of the principal to assign the role to.
+- `description` - The description of the role assignment.
+- `skip_service_principal_aad_check` - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+- `condition` - The condition which will be used to scope the role assignment.
+- `condition_version` - The version of the condition syntax. Valid values are '2.0'.
+
+> Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 
 Type:
 
@@ -364,19 +270,10 @@ map(object({
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
-    principal_type                         = optional(string, null)
   }))
 ```
 
 Default: `{}`
-
-### <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids)
-
-Description: The subnet IDs for the container group.
-
-Type: `list(string)`
-
-Default: `[]`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
@@ -386,37 +283,17 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_zones"></a> [zones](#input\_zones)
-
-Description: A list of availability zones in which the resource should be created.
-
-Type: `list(string)`
-
-Default: `[]`
-
 ## Outputs
 
 The following outputs are exported:
 
-### <a name="output_fqdn"></a> [fqdn](#output\_fqdn)
+### <a name="output_private_endpoints"></a> [private\_endpoints](#output\_private\_endpoints)
 
-Description: The FQDN of the container group derived from `dns_name_label`
+Description:   A map of the private endpoints created.
 
-### <a name="output_ip_address"></a> [ip\_address](#output\_ip\_address)
+### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The IP address allocated to the container group
-
-### <a name="output_name"></a> [name](#output\_name)
-
-Description: Name of the container group
-
-### <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name)
-
-Description: Name of the container group resource group
-
-### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
-
-Description: Resource ID of Container Group Instance
+Description: This is the full output for the resource.
 
 ## Modules
 
