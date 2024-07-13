@@ -11,9 +11,6 @@ resource "random_uuid" "telemetry" {
   count = var.enable_telemetry ? 1 : 0
 }
 
-
-# This is the module telemetry deployment that is only created if telemetry is enabled.
-# It is deployed to the resource's resource group.
 resource "modtm_telemetry" "telemetry" {
   count = var.enable_telemetry ? 1 : 0
 
