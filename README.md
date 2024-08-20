@@ -193,10 +193,10 @@ Type:
 
 ```hcl
 map(object({
-    user_assigned_identity_id = string
+    user_assigned_identity_id = optional(string)
     server                    = string
-    username                  = string
-    password                  = string
+    username                  = optional(string)
+    password                  = optional(string)
   }))
 ```
 
