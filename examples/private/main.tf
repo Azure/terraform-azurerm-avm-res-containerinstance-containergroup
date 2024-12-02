@@ -27,8 +27,16 @@ module "regions" {
 data "azurerm_client_config" "current" {}
 
 # This allows us to randomize the region for the resource group.
+# We are filtering out regions that do not have zones.
+locals {
+  regions_with_zones = [
+    for v in module.regions.regions : v if v.zones != null
+  ]
+}
+
+# This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
+  max = length(local.regions_with_zones) - 1
   min = 0
 }
 ## End of section to provide a random Azure region for the resource group
@@ -41,7 +49,7 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = local.regions_with_zones[random_integer.region_index.result].name
   name     = module.naming.resource_group.name_unique
 }
 
