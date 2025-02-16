@@ -16,6 +16,7 @@ resource "azurerm_container_group" "this" {
 
   dynamic "container" {
     for_each = var.containers
+
     content {
       cpu                   = container.value.cpu
       image                 = container.value.image
@@ -50,6 +51,7 @@ resource "azurerm_container_group" "this" {
       }
       dynamic "ports" {
         for_each = container.value.ports
+
         content {
           port     = ports.value.port
           protocol = try(upper(ports.value.protocol), "TCP")
@@ -79,6 +81,7 @@ resource "azurerm_container_group" "this" {
       }
       dynamic "volume" {
         for_each = container.value.volumes
+
         content {
           mount_path = volume.value.mount_path
           name       = volume.key
@@ -92,6 +95,7 @@ resource "azurerm_container_group" "this" {
 
           dynamic "git_repo" {
             for_each = volume.value.git_repo != null ? [volume.value.git_repo] : []
+
             content {
               url       = git_repo.value.url
               directory = git_repo.value.directory
@@ -104,6 +108,7 @@ resource "azurerm_container_group" "this" {
   }
   dynamic "diagnostics" {
     for_each = var.diagnostics_log_analytics != null ? [var.diagnostics_log_analytics] : []
+
     content {
       log_analytics {
         workspace_id  = diagnostics.value.workspace_id
@@ -113,6 +118,7 @@ resource "azurerm_container_group" "this" {
   }
   dynamic "dns_config" {
     for_each = toset(length(var.dns_name_servers) > 0 ? [var.dns_name_servers] : [])
+
     content {
       nameservers    = dns_config.value
       options        = try(dns_config.options, null)
@@ -121,6 +127,7 @@ resource "azurerm_container_group" "this" {
   }
   dynamic "exposed_port" {
     for_each = var.exposed_ports
+
     content {
       port     = exposed_port.value.port
       protocol = upper(exposed_port.value.protocol)
@@ -128,6 +135,7 @@ resource "azurerm_container_group" "this" {
   }
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
+
     content {
       type         = identity.value.type
       identity_ids = identity.value.user_assigned_resource_ids
@@ -135,6 +143,7 @@ resource "azurerm_container_group" "this" {
   }
   dynamic "image_registry_credential" {
     for_each = var.image_registry_credential
+
     content {
       server                    = image_registry_credential.value.server
       password                  = image_registry_credential.value.password
