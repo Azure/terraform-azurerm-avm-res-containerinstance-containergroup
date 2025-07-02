@@ -1,5 +1,6 @@
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -80,8 +81,8 @@ resource "azurerm_role_assignment" "current" {
 resource "azurerm_key_vault_secret" "secret" {
   key_vault_id    = azurerm_key_vault.keyvault.id
   name            = "secretname"
-  value           = "password123"
   expiration_date = "2024-12-30T20:00:00Z"
+  value           = "password123"
 
   depends_on = [azurerm_role_assignment.current]
 }
@@ -89,22 +90,13 @@ resource "azurerm_key_vault_secret" "secret" {
 
 
 module "test" {
-  source              = "../../"
+  source = "../../"
+
   location            = azurerm_resource_group.this.location
   name                = module.naming.container_group.name_unique
-  resource_group_name = azurerm_resource_group.this.name
   os_type             = "Linux"
+  resource_group_name = azurerm_resource_group.this.name
   restart_policy      = "Always"
-  diagnostics_log_analytics = {
-    workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
-    workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
-  }
-  tags = {
-    clustertype = "public"
-  }
-  zones            = ["1"]
-  priority         = "Regular"
-  enable_telemetry = var.enable_telemetry
   containers = {
     container1 = {
       name   = "container1"
@@ -141,6 +133,11 @@ module "test" {
       }
     }
   }
+  diagnostics_log_analytics = {
+    workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
+    workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
+  }
+  enable_telemetry = var.enable_telemetry
   exposed_ports = [
     {
       port     = 80
@@ -151,6 +148,7 @@ module "test" {
     system_assigned            = true
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
+  priority = "Regular"
   role_assignments = {
     role_assignment_1 = {
       role_definition_id_or_name       = "Contributor"
@@ -158,4 +156,8 @@ module "test" {
       skip_service_principal_aad_check = false
     }
   }
+  tags = {
+    clustertype = "public"
+  }
+  zones = ["1"]
 }
