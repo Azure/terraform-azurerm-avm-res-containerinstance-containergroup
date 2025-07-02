@@ -6,6 +6,7 @@ This deploys the module in its simplest form.
 ```hcl
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -53,10 +54,10 @@ resource "azurerm_resource_group" "this" {
 
 # A vnet is required for the private endpoint.
 resource "azurerm_virtual_network" "this" {
-  address_space       = ["192.168.0.0/24"]
   location            = azurerm_resource_group.this.location
   name                = module.naming.virtual_network.name_unique
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["192.168.0.0/24"]
 }
 
 resource "azurerm_subnet" "this" {
@@ -108,8 +109,8 @@ resource "azurerm_role_assignment" "current" {
 resource "azurerm_key_vault_secret" "secret" {
   key_vault_id    = azurerm_key_vault.keyvault.id
   name            = "secretname"
-  value           = "password123"
   expiration_date = "2024-12-30T20:00:00Z"
+  value           = "password123"
 
   depends_on = [azurerm_role_assignment.current]
 }
@@ -117,23 +118,13 @@ resource "azurerm_key_vault_secret" "secret" {
 
 
 module "test" {
-  source              = "../../"
+  source = "../../"
+
   location            = azurerm_resource_group.this.location
   name                = module.naming.container_group.name_unique
-  resource_group_name = azurerm_resource_group.this.name
   os_type             = "Linux"
-  subnet_ids          = [azurerm_subnet.this.id]
+  resource_group_name = azurerm_resource_group.this.name
   restart_policy      = "Always"
-  diagnostics_log_analytics = {
-    workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
-    workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
-  }
-  tags = {
-    cc = "avm"
-  }
-  zones            = ["1"]
-  priority         = "Regular"
-  enable_telemetry = var.enable_telemetry
   containers = {
     container1 = {
       name   = "container1"
@@ -170,6 +161,11 @@ module "test" {
       }
     }
   }
+  diagnostics_log_analytics = {
+    workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
+    workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
+  }
+  enable_telemetry = var.enable_telemetry
   exposed_ports = [
     {
       port     = 80
@@ -180,6 +176,7 @@ module "test" {
     system_assigned            = true
     user_assigned_resource_ids = [azurerm_user_assigned_identity.this.id]
   }
+  priority = "Regular"
   role_assignments = {
     role_assignment_1 = {
       role_definition_id_or_name       = "Contributor"
@@ -187,6 +184,11 @@ module "test" {
       skip_service_principal_aad_check = false
     }
   }
+  subnet_ids = [azurerm_subnet.this.id]
+  tags = {
+    cc = "avm"
+  }
+  zones = ["1"]
 }
 ```
 
@@ -200,14 +202,6 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 ## Resources
 
