@@ -28,8 +28,11 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.8.2"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.7.0"
+
+  has_availability_zones = true
+  recommended_filter     = false
 }
 
 data "azurerm_client_config" "current" {}
@@ -93,12 +96,12 @@ resource "azurerm_user_assigned_identity" "this" {
 
 
 resource "azurerm_key_vault" "keyvault" {
-  location                  = azurerm_resource_group.this.location
-  name                      = module.naming.key_vault.name_unique
-  resource_group_name       = azurerm_resource_group.this.name
-  sku_name                  = "standard"
-  tenant_id                 = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization = true
+  location                   = azurerm_resource_group.this.location
+  name                       = module.naming.key_vault.name_unique
+  resource_group_name        = azurerm_resource_group.this.name
+  sku_name                   = "standard"
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  rbac_authorization_enabled = true
 }
 
 resource "azurerm_role_assignment" "current" {
@@ -116,8 +119,6 @@ resource "azurerm_key_vault_secret" "secret" {
   depends_on = [azurerm_role_assignment.current]
 }
 
-
-
 module "test" {
   source = "../../"
 
@@ -129,7 +130,7 @@ module "test" {
   containers = {
     container1 = {
       name   = "container1"
-      image  = "nginx:latest"
+      image  = "ghcr.io/servercontainers/nginx:latest"
       cpu    = "1"
       memory = "2"
       ports = [
@@ -254,9 +255,9 @@ Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
-Source: Azure/regions/azurerm
+Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.8.2
+Version: 0.7.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
