@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.74"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -21,8 +21,11 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.7.0"
+
+  has_availability_zones = true
+  recommended_filter     = false
 }
 
 data "azurerm_client_config" "current" {}
@@ -37,7 +40,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.2"
 }
 
 # This is required for resource modules
@@ -45,9 +48,6 @@ resource "azurerm_resource_group" "this" {
   location = module.regions.regions[random_integer.region_index.result].name
   name     = module.naming.resource_group.name_unique
 }
-
-
-
 
 resource "azurerm_log_analytics_workspace" "this" {
   location            = azurerm_resource_group.this.location
@@ -64,12 +64,12 @@ resource "azurerm_user_assigned_identity" "this" {
 
 
 resource "azurerm_key_vault" "keyvault" {
-  location                  = azurerm_resource_group.this.location
-  name                      = module.naming.key_vault.name_unique
-  resource_group_name       = azurerm_resource_group.this.name
-  sku_name                  = "standard"
-  tenant_id                 = data.azurerm_client_config.current.tenant_id
-  enable_rbac_authorization = true
+  location                   = azurerm_resource_group.this.location
+  name                       = module.naming.key_vault.name_unique
+  resource_group_name        = azurerm_resource_group.this.name
+  sku_name                   = "standard"
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  rbac_authorization_enabled = true
 }
 
 resource "azurerm_role_assignment" "current" {
@@ -100,7 +100,7 @@ module "test" {
   containers = {
     container1 = {
       name   = "container1"
-      image  = "nginx:latest"
+      image  = "ghcr.io/servercontainers/nginx:latest"
       cpu    = "1"
       memory = "2"
       ports = [
