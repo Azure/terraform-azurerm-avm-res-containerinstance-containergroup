@@ -35,7 +35,7 @@ variable "containers" {
       port     = number
       protocol = string
     }))
-    volumes = map(object({
+    volumes = optional(map(object({
       mount_path           = string
       name                 = string
       read_only            = optional(bool, false)
@@ -49,7 +49,7 @@ variable "containers" {
         directory = optional(string, null)
         revision  = optional(string, null)
       }))
-    }))
+    })), {})
     environment_variables        = optional(map(string), {})
     secure_environment_variables = optional(map(string), {})
     commands                     = optional(list(string), null)
