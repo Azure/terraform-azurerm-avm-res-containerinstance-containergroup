@@ -146,9 +146,9 @@ resource "azurerm_container_group" "this" {
 
     content {
       server                    = image_registry_credential.value.server
-      password                  = image_registry_credential.value.password
-      user_assigned_identity_id = image_registry_credential.value.user_assigned_identity_id
-      username                  = image_registry_credential.value.username
+      password                  = try(image_registry_credential.value.password, null)
+      user_assigned_identity_id = try(image_registry_credential.value.user_assigned_identity_id, null)
+      username                  = try(image_registry_credential.value.username, null)
     }
   }
   timeouts {
