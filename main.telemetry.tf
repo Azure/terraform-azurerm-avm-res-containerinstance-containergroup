@@ -1,4 +1,3 @@
-
 data "modtm_module_source" "telemetry" {
   count = var.enable_telemetry ? 1 : 0
 
@@ -50,6 +49,7 @@ locals {
   # tflint-ignore: terraform_unused_declarations
   avm_azapi_header = join(" ", [for k, v in local.avm_azapi_headers : "${k}=${v}"])
 }
+
 locals {
   main_location = var.location
 }
@@ -57,4 +57,3 @@ locals {
 data "azapi_client_config" "telemetry" {
   count = var.enable_telemetry ? 1 : 0
 }
-

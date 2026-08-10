@@ -1,10 +1,19 @@
 resource "azurerm_container_group" "this" {
-  location                            = var.location
-  name                                = var.name
-  os_type                             = var.os_type
-  resource_group_name                 = var.resource_group_name
-  dns_name_label                      = length(var.subnet_ids) == 0 ? var.dns_name_label : null
-  dns_name_label_reuse_policy         = var.dns_name_label_reuse_policy
+  location                    = var.location
+  name                        = var.name
+  os_type                     = var.os_type
+  resource_group_name         = var.resource_group_name
+  dns_name_label              = length(var.subnet_ids) == 0 ? var.dns_name_label : null
+  dns_name_label_reuse_policy = var.dns_name_label_reuse_policy
+
+  dynamic "exposed_port" {
+    for_each = var.exposed_ports
+
+    content {
+      port     = exposed_port.value.port
+      protocol = upper(exposed_port.value.protocol)
+    }
+  }
   ip_address_type                     = length(var.subnet_ids) == 0 ? "Public" : "Private"
   key_vault_key_id                    = var.key_vault_key_id
   key_vault_user_assigned_identity_id = var.key_vault_user_assigned_identity_id
@@ -106,6 +115,7 @@ resource "azurerm_container_group" "this" {
       }
     }
   }
+
   dynamic "diagnostics" {
     for_each = var.diagnostics_log_analytics != null ? [var.diagnostics_log_analytics] : []
 
@@ -116,6 +126,7 @@ resource "azurerm_container_group" "this" {
       }
     }
   }
+
   dynamic "dns_config" {
     for_each = toset(length(var.dns_name_servers) > 0 ? [var.dns_name_servers] : [])
 
@@ -125,14 +136,7 @@ resource "azurerm_container_group" "this" {
       search_domains = try(dns_config.search_domains, null)
     }
   }
-  dynamic "exposed_port" {
-    for_each = var.exposed_ports
 
-    content {
-      port     = exposed_port.value.port
-      protocol = upper(exposed_port.value.protocol)
-    }
-  }
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
 
@@ -141,6 +145,7 @@ resource "azurerm_container_group" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   dynamic "image_registry_credential" {
     for_each = var.image_registry_credential
 
@@ -151,6 +156,7 @@ resource "azurerm_container_group" "this" {
       username                  = image_registry_credential.value.username
     }
   }
+
   timeouts {
     create = "2h"
     update = "2h"
@@ -169,5 +175,3 @@ resource "azurerm_role_assignment" "this" {
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
-
-
