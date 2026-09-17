@@ -70,7 +70,7 @@ module "test" {
       ]
     }
   }
-  enable_telemetry = var.enable_telemetry
+  enable_telemetry = false
   exposed_ports = [
     {
       port     = 80
