@@ -142,7 +142,7 @@ module "test" {
     workspace_id  = azurerm_log_analytics_workspace.this.workspace_id
     workspace_key = azurerm_log_analytics_workspace.this.primary_shared_key
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   exposed_ports = [
     {
       port     = 80
@@ -209,7 +209,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 
